@@ -11,9 +11,6 @@ module.exports = {
           'light-gray': '#F3F4F6',
           'mid-gray': '#9CA3AF',
         },
-        fontfamily: {
-          roboto : ['var(--font-roboto)'],
-        },
       },
     },
     plugins: [],
