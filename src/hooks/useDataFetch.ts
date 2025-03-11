@@ -21,8 +21,36 @@ export interface EVData {
   'Vehicle Location': string;
   'Electric Utility': string;
   '2020 Census Tract': string;
-  [key: string]: any;
+  [key: string]: string | number | boolean | null;
 }
+
+// Define types for Papa.parse
+interface ParseError {
+  type: string;
+  code: string;
+  message: string;
+}
+
+interface ParseResult<T> {
+  data: T[];
+  errors: ParseError[];
+  meta: {
+    delimiter: string;
+    linebreak: string;
+    aborted: boolean;
+    truncated: boolean;
+    cursor: number;
+    fields?: string[];
+  };
+}
+
+type ParseConfig<T> = {
+  header: boolean;
+  dynamicTyping: boolean;
+  skipEmptyLines: boolean;
+  complete: (results: ParseResult<T>) => void;
+  error: (error: ParseError) => void;
+};
 
 export const useDataFetch = () => {
   const [data, setData] = useState<EVData[]>([]);
@@ -40,19 +68,20 @@ export const useDataFetch = () => {
         
         const csvText = await response.text();
         
-        Papa.parse(csvText, {
+        // Use the properly typed Papa.parse method with explicit generic type
+        Papa.parse<EVData>(csvText, {
           header: true,
           dynamicTyping: true, 
           skipEmptyLines: true,
-          complete: (results) => {
-            setData(results.data as EVData[]);
+          complete: (results: ParseResult<EVData>) => {
+            setData(results.data);
             setLoading(false);
           },
-          error: (error) => {
-            setError(error);
+          error: (error: ParseError) => {
+            setError(new Error(error.message));
             setLoading(false);
           }
-        });
+        } as ParseConfig<EVData>);
       } catch (err) {
         setError(err instanceof Error ? err : new Error('Unknown error occurred'));
         setLoading(false);

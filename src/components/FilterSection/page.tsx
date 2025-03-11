@@ -5,12 +5,21 @@ import { useRouter } from 'next/navigation';
 import { ChevronDown, Filter, X } from 'lucide-react';
 import { useDataFetch } from '@/hooks/useDataFetch';
 
+// Define a type for the filter options
+type FilterOption = string | number;
+
+// Define a type for the filter categories
+type FilterCategory = {
+  name: string;
+  options: FilterOption[];
+};
+
 const FilterSection = () => {
   const router = useRouter();
   const { data, loading, error } = useDataFetch();
-  const [openDropdown, setOpenDropdown] = useState(null);
-  const [selectedFilters, setSelectedFilters] = useState({});
-  const [filterCategories, setFilterCategories] = useState<{ name: string; options: any[] }[]>([]);
+  const [openDropdown, setOpenDropdown] = useState<number | null>(null);
+  const [selectedFilters, setSelectedFilters] = useState<Record<string, FilterOption>>({});
+  const [filterCategories, setFilterCategories] = useState<FilterCategory[]>([]);
 
   useEffect(() => {
     if (!loading && data.length > 0) {
@@ -31,19 +40,21 @@ const FilterSection = () => {
         "Electric Utility"
       ];
       
-        const filters = attributes.map(attribute => {
+      const filters = attributes.map(attribute => {
         const uniqueValues = [...new Set(data.map(item => item[attribute]))].filter(Boolean);
         
         if (attribute === "Electric Range" || attribute === "Base MSRP" || attribute === "Model Year") {
-          let options = [];
+          let options: FilterOption[] = [];
           
           if (attribute === "Electric Range") {
             options = ["0-100", "101-200", "201-300", "301-400", "400+"];
           } else if (attribute === "Base MSRP") {
             options = ["Under $30k", "$30k-$50k", "$50k-$75k", "$75k-$100k", "Over $100k"];
           } else if (attribute === "Model Year") {
-            const years = uniqueValues.sort();
-            options = years.map(year => year.toString());
+            // Fix: Add type assertion and handle null values properly
+            const years = uniqueValues as (number | null)[];
+            const nonNullYears = years.filter((year): year is number => year !== null).sort();
+            options = nonNullYears.map(year => year.toString());
           }
           
           return {
@@ -54,7 +65,7 @@ const FilterSection = () => {
         
         return {
           name: attribute,
-          options: uniqueValues.sort()
+          options: uniqueValues.sort() as FilterOption[]
         };
       });
       
@@ -62,18 +73,18 @@ const FilterSection = () => {
     }
   }, [data, loading]);
 
-  const toggleDropdown = (index) => {
+  const toggleDropdown = (index: number) => {
     setOpenDropdown(openDropdown === index ? null : index);
   };
 
-  const selectOption = (category, option) => {
+  const selectOption = (category: string, option: FilterOption) => {
     setSelectedFilters({
       ...selectedFilters,
       [category]: option
     });
   };
 
-  const clearFilter = (category) => {
+  const clearFilter = (category: string) => {
     const newFilters = { ...selectedFilters };
     delete newFilters[category];
     setSelectedFilters(newFilters);
@@ -87,6 +98,7 @@ const FilterSection = () => {
     
     router.push(`/dashboard?${queryParams.toString()}`);
   };
+  
   const dropdownVariants = {
     hidden: { 
       opacity: 0,
