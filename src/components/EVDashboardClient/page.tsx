@@ -7,25 +7,9 @@ import FilterSection from '@/components/FilterSection/page';
 import { EVData } from '@/hooks/useDataFetch';
 
 export default function EVDashboardClient() {
-  const { data, loading } = useDataFetch(); // Removed 'error' since it's not used
+  const { data, loading } = useDataFetch();
   const [filteredData, setFilteredData] = useState<EVData[]>([]);
  
-  // Kept for future use, but marked as intentionally unused
-  const _handleFilterChange = (filters: {city?: string; manufacturer?: string}) => {
-    if (!data.length) return;
-   
-    let result = [...data];
-   
-    if (filters.city) {
-      result = result.filter(ev => ev.City === filters.city);
-    }
-   
-    if (filters.manufacturer) {
-      result = result.filter(ev => ev.Make === filters.manufacturer);
-    }
-   
-    setFilteredData(result);
-  };
  
   useEffect(() => {
     if (data.length) {
